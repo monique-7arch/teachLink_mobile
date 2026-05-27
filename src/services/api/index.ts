@@ -8,8 +8,12 @@ export const apiService = {
   delete: (url: string) => apiClient.delete(url),
 };
 
+export { clearCache, fetchWithSWR, invalidateCache } from "./cache";
 export { courseApi } from "./courseApi";
+export {
+    buildCursor, buildCursorCacheKey,
+    paginateWithCursor, parseCursor
+} from "./cursorPagination";
 export { userApi } from "./userApi";
-export { fetchWithSWR, invalidateCache, clearCache } from "./cache";
 
 export default apiService;

@@ -2,7 +2,9 @@ export * from './useAnalytics';
 export { AuthProvider, useAuth } from './useAuth';
 export * from './useBiometricAuth';
 export * from './useCamera';
+export * from './useCoursePagination';
 export * from './useCourseProgress';
+export * from './useDebounce';
 export * from './useDynamicFontSize';
 export * from './useGestures';
 export * from './useHapticFeedback';
@@ -21,4 +23,4 @@ export * from './useScreenReader';
 export * from './useSwipe';
 export * from './useVideoGestures';
 export * from './useVoiceRecognition';
-export * from './useDebounce';
+
