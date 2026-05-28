@@ -1,15 +1,26 @@
-import { CourseCardSkeleton, MobileHeader, SearchResultItem, Skeleton } from '@/src/components';
-import { sampleCourse } from '@/src/data/sampleCourse';
-import { useAppStore } from '@/src/store';
 import { useRouter } from 'expo-router';
-import React, { lazy, Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
-const MobileSearch = lazy(() =>
-  import('@/src/components/mobile/MobileSearch').then(m => ({ default: m.MobileSearch }))
-);
+import {
+  CourseCardSkeleton,
+  MobileHeader,
+  SearchResultItem,
+  SearchScreenSkeleton,
+  Skeleton,
+} from '@/components';
+import { sampleCourse } from '@/data/sampleCourse';
+import { useAppStore } from '@/store';
+import { createLazyRoute } from '@/utils/lazyRoute';
 
-export default function SearchScreen() {
+const LazyMobileSearch = createLazyRoute({
+  importFn: () =>
+    import('@/components/mobile/MobileSearch').then(m => ({ default: m.MobileSearch })),
+  LoadingFallback: SearchScreenSkeleton,
+  boundaryName: 'SearchRoute',
+});
+
+const SearchScreen = () => {
   const router = useRouter();
   const { isLoading, setLoading } = useAppStore();
 
@@ -37,6 +48,7 @@ export default function SearchScreen() {
   useEffect(() => {
     const cleanup = fetchSearchData();
     return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulated search fetch runs once on mount
   }, []);
 
   const handleResultPress = (item: SearchResultItem) => {
@@ -53,16 +65,7 @@ export default function SearchScreen() {
       <View style={styles.container}>
         <MobileHeader title="Search" showBack />
         <View style={styles.skeletonContainer}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              width: '100%',
-              paddingHorizontal: 16,
-              marginBottom: 24,
-              gap: 12,
-            }}
-          >
+          <View style={styles.searchBarRow}>
             <Skeleton width="100%" height={50} borderRadius={25} />
           </View>
           <CourseCardSkeleton />
@@ -78,12 +81,12 @@ export default function SearchScreen() {
   return (
     <View style={styles.container}>
       <MobileHeader title="Search" showBack />
-      <Suspense fallback={null}>
-        <MobileSearch onResultPress={handleResultPress} placeholder="Search courses..." />
-      </Suspense>
+      <LazyMobileSearch onResultPress={handleResultPress} placeholder="Search courses..." />
     </View>
   );
-}
+};
+
+export default SearchScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -94,5 +97,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 16,
     alignItems: 'center',
+  },
+  searchBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 16,
+    marginBottom: 24,
+    gap: 12,
   },
 });

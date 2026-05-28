@@ -29,7 +29,8 @@
     "audit": "npm audit --audit-level=high",
     "depcheck": "depcheck",
     "perf:bundle": "node scripts/checkBundleSize.js",
-    "perf:api": "node scripts/checkApiPerf.js"
+    "perf:api": "node scripts/checkApiPerf.js",
+    "measure:bundle": "bash scripts/measureRouteBundle.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
