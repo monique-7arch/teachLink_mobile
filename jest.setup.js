@@ -396,3 +396,11 @@ jest.mock('react-native-svg', () => {
     Circle: RN.View,
   };
 });
+
+// Mock expo-store-review for in-app review tests
+jest.mock('expo-store-review', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  requestReview: jest.fn(() => Promise.resolve()),
+  hasAction: jest.fn(() => Promise.resolve(true)),
+  storeUrl: jest.fn(() => Promise.resolve('https://apps.apple.com/app/teachlink/id1234567890')),
+}));
