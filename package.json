@@ -124,5 +124,8 @@
     "**/*.{json,md,css}": [
       "prettier --write"
     ]
+  },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "^1.32.0"
   }
 }
