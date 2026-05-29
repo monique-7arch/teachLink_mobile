@@ -1,7 +1,7 @@
 {
   "name": "teachlink_mobile",
   "main": "expo-router/entry",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -104,6 +104,13 @@
     "@lhci/cli": "^0.15.1",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^13.3.3",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__template": "^7.4.4",
+    "@types/babel__traverse": "^7.28.0",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "29.5.14",
+    "@types/node": "^25.0.10",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^54.0.10",
     "depcheck": "^1.4.7",

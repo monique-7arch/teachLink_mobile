@@ -1,3 +1,32 @@
+# [1.3.0](https://github.com/rinafcode/teachLink_mobile/compare/v1.2.0...v1.3.0) (2026-05-29)
+
+
+### Bug Fixes
+
+* harden mobile search and video player tests ([af42884](https://github.com/rinafcode/teachLink_mobile/commit/af42884b5dd0b2c13c90407767e38c4613b2eaa7))
+* regenerate package-lock.json to sync with package.json dependencies ([bd919f4](https://github.com/rinafcode/teachLink_mobile/commit/bd919f4d23a8e0fb1ee40bff8c364c6d7cf83f57))
+* repair quiz carousel bundle parse errors ([d451ac7](https://github.com/rinafcode/teachLink_mobile/commit/d451ac76f42c8e043fc938ec617d2a7dd8fbc614))
+* resolve CI, dependency audit, and bundle size tracking workflow failures ([fcc8a5d](https://github.com/rinafcode/teachLink_mobile/commit/fcc8a5dcbcbce679af6ef0193f4727e4431c08e9))
+
+
+### Features
+
+* **#354:** Implement performance regression tests for heavy components ([81d04af](https://github.com/rinafcode/teachLink_mobile/commit/81d04af5e28abb68372613e6b4ace5d5e5ebe7bd)), closes [#354](https://github.com/rinafcode/teachLink_mobile/issues/354) [#354](https://github.com/rinafcode/teachLink_mobile/issues/354)
+* **#392:** Implement efficient virtual scroll for infinite lists ([4f374ce](https://github.com/rinafcode/teachLink_mobile/commit/4f374ce40662bd91989ff30ddb8eeb9b7b367ea0)), closes [#392](https://github.com/rinafcode/teachLink_mobile/issues/392)
+* **#412:** Implement batch processing for large data imports/exports ([6d5fa4e](https://github.com/rinafcode/teachLink_mobile/commit/6d5fa4e979b56552a226e1fb3ccf1da5f7494806)), closes [#412](https://github.com/rinafcode/teachLink_mobile/issues/412)
+* **#640:** add OpenAPI 3.0 compliance validation with CI integration ([a319477](https://github.com/rinafcode/teachLink_mobile/commit/a3194778b57d02f4f646b6d2eb66826ffab0939c)), closes [#640](https://github.com/rinafcode/teachLink_mobile/issues/640)
+* cache reusable form values for autofill ([b514fd4](https://github.com/rinafcode/teachLink_mobile/commit/b514fd456f895034a49c198dca2b6cf8b01364fd))
+* expand cached form prefilling across auth flows ([0aaeedf](https://github.com/rinafcode/teachLink_mobile/commit/0aaeedf2d3a20d9ea92293cfbfee3160db6a29b2))
+* implement optimized video player with native controls and buffering strategy ([c6da89b](https://github.com/rinafcode/teachLink_mobile/commit/c6da89b132d635c5e7172e0c5b3ee7a88948bcb3))
+* reduce animation frame rate on low-end devices and battery saver mode ([8fb4b40](https://github.com/rinafcode/teachLink_mobile/commit/8fb4b40d8b8ce8afdbae9c766a0089644cf40884))
+* version-based cache invalidation ([#260](https://github.com/rinafcode/teachLink_mobile/issues/260)) ([d51bd44](https://github.com/rinafcode/teachLink_mobile/commit/d51bd4445634135852f64a45d0d78d069ccc5ecc))
+* virtualize LessonCarousel and QuizCarousel with FlatList ([7c5be18](https://github.com/rinafcode/teachLink_mobile/commit/7c5be18bdc8926df1c214c46ec7ca40a757da526))
+
+
+### Performance Improvements
+
+* **navigation:** implement deep link pre-warming ([#388](https://github.com/rinafcode/teachLink_mobile/issues/388)) ([3649cb9](https://github.com/rinafcode/teachLink_mobile/commit/3649cb9b43f235fb387af609edb37fe1de75b711))
+
 # [1.2.0](https://github.com/rinafcode/teachLink_mobile/compare/v1.1.0...v1.2.0) (2026-05-28)
 
 
