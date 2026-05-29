@@ -17,12 +17,11 @@ export function useFormCache(fieldKeys: FormCacheFieldKey[]) {
   const [cacheStore, setCacheStore] = useState<FormCacheStore>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const keysSignature = fieldKeys.join(',');
   const stableFieldKeysRef = useRef(fieldKeys);
 
   useEffect(() => {
     stableFieldKeysRef.current = fieldKeys;
-  }, [keysSignature]);
+  }, [fieldKeys]);
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -33,7 +32,7 @@ export function useFormCache(fieldKeys: FormCacheFieldKey[]) {
     setPrefillValues(values);
     setCacheStore(store);
     setIsLoading(false);
-  }, [keysSignature]);
+  }, []);
 
   useEffect(() => {
     void refresh();
