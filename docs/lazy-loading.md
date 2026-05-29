@@ -42,7 +42,8 @@ export default function CourseViewerScreen() {
 | `app/(tabs)/index.tsx`     | `HomeScreenContent`        | `HomeScreenSkeleton`   |
 | `app/course-viewer.tsx`    | `MobileCourseViewer`       | `CourseViewerSkeleton` |
 | `app/quiz.tsx`             | `MobileQuizManager`        | `QuizSkeleton`         |
-| `app/search.tsx`           | `MobileSearch`             | `SearchScreenSkeleton` |
+| `app/(tabs)/search.tsx`    | `MobileSearch`             | `SearchScreenSkeleton` |
+| `app/(tabs)/profile.tsx`   | `MobileProfile`            | `ProfileSkeleton`      |
 | `app/settings.tsx`         | `MobileSettings`           | `SettingsSkeleton`     |
 | `app/profile/[userId].tsx` | `MobileProfile`            | `ProfileSkeleton`      |
 | `app/qr-scanner.tsx`       | `QRScanner`                | `QRScannerSkeleton`    |

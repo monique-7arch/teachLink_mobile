@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Alert, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { QRScannerSkeleton } from '@/components/mobile/QRScannerSkeleton';
 import { createLazyRoute } from '@/utils/lazyRoute';
@@ -26,10 +26,16 @@ const QRScannerScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <LazyQRScanner onLinkScanned={handleLinkScanned} />
     </View>
   );
 };
 
 export default QRScannerScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

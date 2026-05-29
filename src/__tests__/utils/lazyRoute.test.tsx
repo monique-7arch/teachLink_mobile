@@ -33,9 +33,10 @@ describe('Expo route lazy-loading coverage', () => {
   const repoRoot = path.resolve(__dirname, '../../..');
   const routeFiles = [
     'app/(tabs)/index.tsx',
+    'app/(tabs)/search.tsx',
+    'app/(tabs)/profile.tsx',
     'app/course-viewer.tsx',
     'app/quiz.tsx',
-    'app/search.tsx',
     'app/settings.tsx',
     'app/profile/[userId].tsx',
     'app/qr-scanner.tsx',
