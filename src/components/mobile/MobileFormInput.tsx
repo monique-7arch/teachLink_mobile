@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { View, TextInput, TextInputProps, TouchableOpacity } from 'react-native';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react-native';
-import { AppText as Text } from '../common/AppText';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, TextInput, TextInputProps, TouchableOpacity } from 'react-native';
+
 import { useDynamicFontSize } from '../../hooks';
+import {
+  formCacheService,
+  setCachedFieldValue,
+  type FormCacheFieldKey,
+} from '../../services/formCache';
+import { AppText as Text } from '../common/AppText';
 
 /**
  * Props for the MobileFormInput component
@@ -24,6 +30,12 @@ interface MobileFormInputProps extends TextInputProps {
   required?: boolean;
   /** Whether to use dark mode styling */
   isDark?: boolean;
+  /** Shared cache key for autofill and suggestions */
+  cacheKey?: FormCacheFieldKey;
+  /** Persist value to cache on blur (default: true when cacheKey is set) */
+  cacheOnBlur?: boolean;
+  /** Optional ref for focusing the underlying input from parent screens */
+  inputRef?: React.Ref<TextInput>;
 }
 
 export const MobileFormInput: React.FC<MobileFormInputProps> = ({
@@ -36,15 +48,57 @@ export const MobileFormInput: React.FC<MobileFormInputProps> = ({
   leftIcon,
   required = false,
   isDark = false,
+  cacheKey,
+  cacheOnBlur = true,
+  inputRef,
   secureTextEntry,
   multiline = false,
   keyboardType = 'default',
+  onBlur,
   ...rest
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
   const { scale } = useDynamicFontSize();
   const isPassword = secureTextEntry === true;
+
+  useEffect(() => {
+    if (!cacheKey || !isFocused) {
+      setSuggestion(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const store = await formCacheService.loadFormCache();
+      if (cancelled) return;
+      setSuggestion(formCacheService.getSuggestionForField(store, cacheKey, value));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cacheKey, isFocused, value]);
+
+  const handleBlur = useCallback((e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
+    setIsFocused(false);
+    if (cacheKey && cacheOnBlur && value.trim()) {
+      void setCachedFieldValue(cacheKey, value);
+    }
+    onBlur?.(e);
+  }, [cacheKey, cacheOnBlur, value, onBlur]);
+
+  const handleApplySuggestion = useCallback(() => {
+    if (suggestion) {
+      onChangeText(suggestion);
+      setSuggestion(null);
+    }
+  }, [suggestion, onChangeText]);
+
+  const handleFocus = useCallback(() => setIsFocused(true), []);
+
+  const handleTogglePassword = useCallback(() => setShowPassword(prev => !prev), []);
 
   const borderColor = error ? '#ef4444' : isFocused ? '#19c3e6' : isDark ? '#334155' : '#e2e8f0';
 
@@ -95,8 +149,9 @@ export const MobileFormInput: React.FC<MobileFormInputProps> = ({
           placeholderTextColor={isDark ? '#475569' : '#94a3b8'}
           value={value}
           onChangeText={onChangeText}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          ref={inputRef}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           secureTextEntry={isPassword && !showPassword}
           multiline={multiline}
           keyboardType={keyboardType}
@@ -104,10 +159,7 @@ export const MobileFormInput: React.FC<MobileFormInputProps> = ({
         />
 
         {isPassword && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            className="px-3.5"
-          >
+          <TouchableOpacity onPress={handleTogglePassword} className="px-3.5">
             {showPassword ? (
               <EyeOff size={scale(20)} color={isDark ? '#64748b' : '#94a3b8'} />
             ) : (
@@ -116,6 +168,33 @@ export const MobileFormInput: React.FC<MobileFormInputProps> = ({
           </TouchableOpacity>
         )}
       </View>
+
+      {suggestion && !error && (
+        <TouchableOpacity
+          className="flex-row items-center gap-1.5 mt-1.5 px-3 py-2 rounded-xl border"
+          style={{
+            backgroundColor: isDark ? '#0f172a' : '#f0f9ff',
+            borderColor: isDark ? '#334155' : '#bae6fd',
+          }}
+          onPress={handleApplySuggestion}
+          accessibilityRole="button"
+          accessibilityLabel={`Use cached value ${suggestion}`}
+        >
+          <Text
+            className="font-medium"
+            style={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: scale(12) }}
+          >
+            Use saved:
+          </Text>
+          <Text
+            className="flex-1 font-semibold"
+            style={{ color: isDark ? '#38bdf8' : '#0284c7', fontSize: scale(12) }}
+            numberOfLines={1}
+          >
+            {suggestion}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {error && (
         <View className="flex-row items-center gap-1 mt-1">

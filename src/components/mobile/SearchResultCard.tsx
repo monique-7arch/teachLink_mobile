@@ -19,7 +19,10 @@ export interface SearchResultCardProps {
   onPress: () => void;
 }
 
-export function SearchResultCard({ item, onPress }: SearchResultCardProps) {
+export const SearchResultCard = React.memo(function SearchResultCard({
+  item,
+  onPress,
+}: SearchResultCardProps) {
   const metaParts = [item.category, item.level].filter(Boolean);
   const metaText = metaParts.join(' · ');
   const screenReaderDescription = [item.title, item.description || item.subtitle, metaText]
@@ -59,5 +62,13 @@ export function SearchResultCard({ item, onPress }: SearchResultCardProps) {
       </View>
     </TouchableOpacity>
   );
-}
+}, (prev, next) => {
+  return prev.item.id === next.item.id
+    && prev.item.title === next.item.title
+    && prev.item.description === next.item.description
+    && prev.item.subtitle === next.item.subtitle
+    && prev.item.duration === next.item.duration
+    && prev.item.category === next.item.category
+    && prev.item.level === next.item.level;
+});
 
