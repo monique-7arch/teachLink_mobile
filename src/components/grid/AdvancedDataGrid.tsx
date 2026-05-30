@@ -1,4 +1,12 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, Filter, FilterX, Upload } from 'lucide-react-native';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Download,
+  Filter,
+  FilterX,
+  Upload,
+} from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -478,57 +486,62 @@ interface DataRowProps<T extends GridRow> {
   onCancel: () => void;
 }
 
-const DataRow = React.memo(function DataRow<T extends GridRow>({
-  row,
-  rowIndex,
-  columns,
-  columnWidths,
-  editingCell,
-  editError,
-  onStartEdit,
-  onChangeDraft,
-  onCommit,
-  onCancel,
-}: DataRowProps<T>) {
-  const isEvenRow = rowIndex % 2 === 0;
+const DataRow = React.memo(
+  function DataRow<T extends GridRow>({
+    row,
+    rowIndex,
+    columns,
+    columnWidths,
+    editingCell,
+    editError,
+    onStartEdit,
+    onChangeDraft,
+    onCommit,
+    onCancel,
+  }: DataRowProps<T>) {
+    const isEvenRow = rowIndex % 2 === 0;
 
-  return (
-    <View style={[styles.dataRow, isEvenRow && styles.dataRowEven]}>
-      {columns.map((col, idx) => {
-        const cellIsEditing = editingCell?.rowId === row.id && editingCell?.columnKey === col.key;
+    return (
+      <View style={[styles.dataRow, isEvenRow && styles.dataRowEven]}>
+        {columns.map((col, idx) => {
+          const cellIsEditing = editingCell?.rowId === row.id && editingCell?.columnKey === col.key;
 
-        return (
-          <View key={col.key} style={[styles.dataCell, { width: columnWidths[idx] }]}>
-            <InlineEditing
-              value={row[col.key]}
-              isEditing={cellIsEditing}
-              draft={cellIsEditing ? editingCell!.draft : ''}
-              error={cellIsEditing ? editError : null}
-              column={col as ColumnDef}
-              onStartEdit={() => onStartEdit(row.id, col.key, row[col.key])}
-              onChangeDraft={onChangeDraft}
-              onCommit={onCommit}
-              onCancel={onCancel}
-            />
-          </View>
-        );
-      })}
-    </View>
-  );
-}, (prev, next) => {
-  return prev.row.id === next.row.id
-    && prev.rowIndex === next.rowIndex
-    && prev.columns === next.columns
-    && prev.columnWidths === next.columnWidths
-    && prev.editingCell?.rowId === next.editingCell?.rowId
-    && prev.editingCell?.columnKey === next.editingCell?.columnKey
-    && prev.editingCell?.draft === next.editingCell?.draft
-    && prev.editError === next.editError
-    && prev.onStartEdit === next.onStartEdit
-    && prev.onChangeDraft === next.onChangeDraft
-    && prev.onCommit === next.onCommit
-    && prev.onCancel === next.onCancel;
-}) as <T extends GridRow>(props: DataRowProps<T>) => JSX.Element;
+          return (
+            <View key={col.key} style={[styles.dataCell, { width: columnWidths[idx] }]}>
+              <InlineEditing
+                value={row[col.key]}
+                isEditing={cellIsEditing}
+                draft={cellIsEditing ? editingCell!.draft : ''}
+                error={cellIsEditing ? editError : null}
+                column={col as ColumnDef}
+                onStartEdit={() => onStartEdit(row.id, col.key, row[col.key])}
+                onChangeDraft={onChangeDraft}
+                onCommit={onCommit}
+                onCancel={onCancel}
+              />
+            </View>
+          );
+        })}
+      </View>
+    );
+  },
+  (prev, next) => {
+    return (
+      prev.row.id === next.row.id &&
+      prev.rowIndex === next.rowIndex &&
+      prev.columns === next.columns &&
+      prev.columnWidths === next.columnWidths &&
+      prev.editingCell?.rowId === next.editingCell?.rowId &&
+      prev.editingCell?.columnKey === next.editingCell?.columnKey &&
+      prev.editingCell?.draft === next.editingCell?.draft &&
+      prev.editError === next.editError &&
+      prev.onStartEdit === next.onStartEdit &&
+      prev.onChangeDraft === next.onChangeDraft &&
+      prev.onCommit === next.onCommit &&
+      prev.onCancel === next.onCancel
+    );
+  }
+) as <T extends GridRow>(props: DataRowProps<T>) => JSX.Element;
 
 // ─── PaginationBar ────────────────────────────────────────────────────────────
 

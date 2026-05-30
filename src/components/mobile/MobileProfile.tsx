@@ -354,14 +354,16 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
   const textSecondary = isDark ? '#94a3b8' : '#64748b';
   const borderColor = isDark ? '#334155' : '#e2e8f0';
 
-  const getInitials = useCallback((name: string) =>
-    name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2),
-  []);
+  const getInitials = useCallback(
+    (name: string) =>
+      name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2),
+    []
+  );
 
   const handleStartEdit = useCallback(() => {
     setEditName(profile.name);
@@ -509,7 +511,7 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
           <View style={styles.avatarRow}>
             <TouchableOpacity
               style={styles.avatarContainer}
-            onPress={handleOpenCamera}
+              onPress={handleOpenCamera}
               activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityLabel="Change avatar"
@@ -623,7 +625,7 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
           </View>
 
           {/* Quick stats strip */}
-          <View style={styles.statsStrip, { backgroundColor: cardBg, borderColor }]}>
+          <View style={[styles.statsStrip, { backgroundColor: cardBg, borderColor }]}>
             {stripItems.map((s, i) => (
               <View
                 key={`stat-${i}-${s.label}`}
@@ -789,7 +791,10 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
                       value: profile.website || 'Not set',
                     },
                   ].map((item, i) => (
-                    <View key={`detail-${i}-${item.label}`} style={[styles.detailRow, { borderBottomColor: borderColor }]}>
+                    <View
+                      key={`detail-${i}-${item.label}`}
+                      style={[styles.detailRow, { borderBottomColor: borderColor }]}
+                    >
                       <View style={styles.detailIconLabel}>
                         {item.icon}
                         <Text style={[styles.detailLabel, { color: textSecondary }]}>

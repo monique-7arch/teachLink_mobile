@@ -36,7 +36,7 @@ const ScreenTracker = () => {
   useEffect(() => {
     if (pathname) {
       trackScreen(pathname, { segments: segments.join('/') });
-      
+
       // Track and record transitions + trigger predictive preloading
 
       if (prevPathname.current !== pathname) {
@@ -48,7 +48,7 @@ const ScreenTracker = () => {
         }
 
         sessionRestorationService.saveRoute(pathname);
-        
+
         // Trigger background preloading for predicted destinations
         preloadService.preload(pathname, router);
       }
