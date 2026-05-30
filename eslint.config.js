@@ -10,7 +10,6 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ['dist/*', '.rnstorybook/storybook.requires.ts'],
-
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -20,6 +19,12 @@ module.exports = defineConfig([
     settings: {
       react: {
         version: 'detect',
+      },
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: './tsconfig.json',
+        },
       },
     },
     rules: {
@@ -59,8 +64,11 @@ module.exports = defineConfig([
         },
       ],
 
-      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+
+      // Prevent inline component definitions that defeat memoization
+      'react/no-unstable-nested-components': ['warn', { allowAsProps: false }],
 
       'jsx-a11y/alt-text': 'warn',
       'jsx-a11y/aria-props': 'warn',

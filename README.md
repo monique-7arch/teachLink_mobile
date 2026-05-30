@@ -117,6 +117,7 @@ For quarterly planning guide, see [PERFORMANCE_AUDIT_QUARTERLY.md](./PERFORMANCE
 - Full documentation: [src/audit/README.md](./src/audit/README.md)
 - Quarterly process guide: [PERFORMANCE_AUDIT_QUARTERLY.md](./PERFORMANCE_AUDIT_QUARTERLY.md)
 - Detailed analyzer docs in `src/audit/analyzers/`
+- Batch import/export processing: [docs/batch-processing.md](./docs/batch-processing.md)
 
 ## Logging
 
@@ -296,6 +297,8 @@ Notification delivery now adapts to recent engagement to reduce fatigue and batt
 - **Inactive users** (72+ hours or no engagement history): ~180 minute minimum gap per notification type.
 
 Engagement is currently recorded when users open notifications. Throttling is enforced per notification type before storing foreground notifications.
+
+For details on the notification deduplication and batching strategy, see `docs/NOTIFICATION_STRATEGY.md`.
 
 ## Resources
 
