@@ -1,6 +1,8 @@
+import './src/utils/assetInlinePolyfill';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, LogBox } from 'react-native';
+
 
 import StorybookUI from './.rnstorybook';
 import './global.css';
