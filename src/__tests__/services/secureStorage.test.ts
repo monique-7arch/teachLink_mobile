@@ -3,7 +3,9 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 import * as secureStorage from '../../services/secureStorage';
-import { appLogger } from '../../utils/logger';
+import defaultLogger from '../../utils/logger';
+
+const logger = defaultLogger;
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -40,7 +42,7 @@ jest.mock('../../utils/logger', () => {
 const logger = appLogger;
 const mockSecureStore = SecureStore as jest.Mocked<typeof SecureStore>;
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockLogger = logger as jest.Mocked<typeof defaultLogger>;
 
 describe('SecureStorage - Keychain/Keystore Verification #140', () => {
   let mockStorage: Record<string, string> = {};
@@ -101,6 +103,20 @@ describe('SecureStorage - Keychain/Keystore Verification #140', () => {
 
   describe('✅ Secure Storage Initialization', () => {
     it('should initialize and verify secure storage on startup', async () => {
+      const mockStore: Record<string, string> = {};
+
+      mockSecureStore.setItemAsync.mockImplementation(async (key: string, value: string) => {
+        mockStore[key] = value;
+        return Promise.resolve();
+      });
+      mockSecureStore.getItemAsync.mockImplementation(async (key: string) => {
+        return Promise.resolve(mockStore[key] ?? null);
+      });
+      mockSecureStore.deleteItemAsync.mockImplementation(async (key: string) => {
+        delete mockStore[key];
+        return Promise.resolve();
+      });
+
       const result = await secureStorage.initializeSecureStorage();
 
       expect(result).toBe(true);
