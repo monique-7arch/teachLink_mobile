@@ -40,6 +40,22 @@ export const courseApi = {
     );
   },
 
+  getCoursesPage(request: CursorPageRequest = {}): Promise<CursorPageResponse<Course>> {
+    const { limit = 20, cursor, orderBy = 'id', direction = 'asc' } = request;
+    const cacheKey = buildCursorCacheKey({ limit, cursor, orderBy, direction });
+
+    return fetchWithSWR(
+      cacheKey,
+      () => apiClient
+        .get<CursorPageResponse<Course>>("/courses", {
+          params: { limit, cursor, orderBy, direction },
+        })
+        .then((r) => r.data),
+      TTL,
+      STALE_TTL,
+    );
+  },
+
   getCourse(id: string): Promise<Course> {
     return fetchWithSWR(
       courseKey(id),
