@@ -1,3 +1,11 @@
+# [1.15.0](https://github.com/rinafcode/teachLink_mobile/compare/v1.14.1...v1.15.0) (2026-06-01)
+
+
+### Features
+
+* implement cursor-based pagination for courses and add related hooks and tests ([9f4efb2](https://github.com/rinafcode/teachLink_mobile/commit/9f4efb215e83cdc377c298d3c02cd56cf85e36a7))
+* Implement efficient animation scheduling with requestAnimationFrame ([#349](https://github.com/rinafcode/teachLink_mobile/issues/349)) ([b0b8292](https://github.com/rinafcode/teachLink_mobile/commit/b0b82923c0d9bc8c4f746a0f635a9604b0a75218))
+
 ## [1.14.1](https://github.com/rinafcode/teachLink_mobile/compare/v1.14.0...v1.14.1) (2026-06-01)
 
 
