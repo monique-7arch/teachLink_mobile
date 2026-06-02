@@ -61,10 +61,7 @@ export function NotificationSettings() {
 
   const isEnabled = permissionStatus === 'granted' && pushToken !== null;
 
-  const handlePreferenceChange = async (
-    key: keyof NotificationPreferences,
-    value: boolean
-  ) => {
+  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
     try {
       setSavingKey(key);
       // Update local preferences (automatically persisted by Zustand)
@@ -152,9 +149,7 @@ export function NotificationSettings() {
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={
-          showAdvancedNotifications
-            ? 'Hide advanced notifications'
-            : 'Show advanced notifications'
+          showAdvancedNotifications ? 'Hide advanced notifications' : 'Show advanced notifications'
         }
         accessibilityState={{ expanded: showAdvancedNotifications }}
         className="mx-4 mt-4 flex-row items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
@@ -162,9 +157,7 @@ export function NotificationSettings() {
         <View className="flex-row items-center gap-2">
           <Text className="text-lg">&#x1F514;</Text>
           <Text className="text-sm font-semibold text-indigo-500">
-            {showAdvancedNotifications
-              ? 'Hide Advanced Notifications'
-              : 'Advanced Notifications'}
+            {showAdvancedNotifications ? 'Hide Advanced Notifications' : 'Advanced Notifications'}
           </Text>
         </View>
         {showAdvancedNotifications ? (
@@ -233,6 +226,4 @@ export function NotificationSettings() {
   );
 }
 
-
 export default NotificationSettings;
-

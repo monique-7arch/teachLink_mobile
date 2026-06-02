@@ -77,7 +77,7 @@ const RootLayout = () => {
   const router = useRouter();
 
   const handleDeepLink = useCallback(
-    deepLink => {
+    (deepLink: any) => {
       const path = getPathFromDeepLink(deepLink);
       if (path) {
         router.replace(path);

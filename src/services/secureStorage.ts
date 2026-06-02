@@ -79,7 +79,7 @@ async function verifySecureStorageAvailable(): Promise<void> {
     logger.info(`✅ SecureStorage verification passed on ${Platform.OS}`);
   } catch (error) {
     const errorMsg = `❌ CRITICAL: SecureStorage verification failed on ${Platform.OS}: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error(errorMsg);
+    logger.error(errorMsg, error instanceof Error ? error : new Error(String(error)));
     throw new Error(errorMsg);
   }
 }

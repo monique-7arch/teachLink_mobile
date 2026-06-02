@@ -10,6 +10,7 @@ jest.mock('react-native', () => ({
   View: 'View',
   Text: 'Text',
   TouchableOpacity: 'TouchableOpacity',
+  KeyboardAvoidingView: 'KeyboardAvoidingView',
   Modal: 'Modal',
   SafeAreaView: 'SafeAreaView',
   KeyboardAvoidingView: 'KeyboardAvoidingView',
@@ -56,6 +57,10 @@ jest.mock('react-native', () => ({
       stopAnimation: jest.fn(),
     })),
     timing: jest.fn(() => ({
+      start: jest.fn(callback => callback && callback({ finished: true })),
+      stop: jest.fn(),
+    })),
+    spring: jest.fn(() => ({
       start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
     })),

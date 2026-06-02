@@ -57,7 +57,7 @@ const secureStorageAdapter: StateStorage = {
 export const useAppStore = create<AppState>()(
   devtools(
     persist(
-      subscribeWithSelector((set) => ({
+      subscribeWithSelector(set => ({
         user: null,
         isAuthenticated: false,
         isAuthLoading: false,
@@ -95,7 +95,7 @@ export const useAppStore = create<AppState>()(
             false,
             'setTokens'
           ),
-        setSessionExpiringSoon: (sessionExpiringSoon) =>
+        setSessionExpiringSoon: sessionExpiringSoon =>
           set({ sessionExpiringSoon }, false, 'setSessionExpiringSoon'),
         setAuthLoading: (isAuthLoading) => set({ isAuthLoading }, false, 'setAuthLoading'),
         setAuthError: (authError) => set({ authError }, false, 'setAuthError'),
@@ -129,7 +129,7 @@ export const useAppStore = create<AppState>()(
          * Transient flags (isLoading, isAuthLoading, error, authError)
          * are intentionally excluded — they should always start fresh.
          */
-        partialize: (state) => ({
+        partialize: state => ({
           user: state.user,
           isAuthenticated: state.isAuthenticated,
           accessToken: state.accessToken,

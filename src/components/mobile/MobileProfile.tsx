@@ -346,14 +346,16 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
   const textSecondary = isDark ? '#94a3b8' : '#64748b';
   const borderColor = isDark ? '#334155' : '#e2e8f0';
 
-  const getInitials = useCallback((name: string) =>
-    name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2),
-  []);
+  const getInitials = useCallback(
+    (name: string) =>
+      name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2),
+    []
+  );
 
   const handleStartEdit = useCallback(() => {
     setEditName(profile.name);
@@ -501,7 +503,7 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
           <View style={styles.avatarRow}>
             <TouchableOpacity
               style={styles.avatarContainer}
-            onPress={handleOpenCamera}
+              onPress={handleOpenCamera}
               activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityLabel="Change avatar"
@@ -715,15 +717,19 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
                     onPress={handleToggleAdvancedFields}
                     activeOpacity={0.7}
                     accessibilityRole="button"
-                    accessibilityLabel={showAdvancedFields ? 'Hide advanced details' : 'Show advanced details'}
+                    accessibilityLabel={
+                      showAdvancedFields ? 'Hide advanced details' : 'Show advanced details'
+                    }
                     accessibilityState={{ expanded: showAdvancedFields }}
                   >
                     <Text style={[styles.disclosureToggleText, { color: '#19c3e6' }]}>
                       {showAdvancedFields ? 'Hide Advanced Details' : 'Advanced Details'}
                     </Text>
-                    {showAdvancedFields
-                      ? <ChevronUp size={16} color="#19c3e6" />
-                      : <ChevronDown size={16} color="#19c3e6" />}
+                    {showAdvancedFields ? (
+                      <ChevronUp size={16} color="#19c3e6" />
+                    ) : (
+                      <ChevronDown size={16} color="#19c3e6" />
+                    )}
                   </TouchableOpacity>
 
                   {/* ── Advanced Fields (expandable) ── */}
@@ -777,7 +783,10 @@ export const MobileProfile: React.FC<MobileProfileProps> = ({
                       value: profile.website || 'Not set',
                     },
                   ].map((item, i) => (
-                    <View key={`detail-${i}-${item.label}`} style={[styles.detailRow, { borderBottomColor: borderColor }]}>
+                    <View
+                      key={`detail-${i}-${item.label}`}
+                      style={[styles.detailRow, { borderBottomColor: borderColor }]}
+                    >
                       <View style={styles.detailIconLabel}>
                         {item.icon}
                         <Text style={[styles.detailLabel, { color: textSecondary }]}>

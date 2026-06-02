@@ -293,7 +293,6 @@ export const MobileSettings = ({
 
   return (
     <ScrollView className="flex-1 bg-gray-50 dark:bg-gray-900">
-
       {/* ── ESSENTIAL: ACCOUNT ─────────────────────────────── */}
       <SettingsSection title="Account">
         <SettingRow
