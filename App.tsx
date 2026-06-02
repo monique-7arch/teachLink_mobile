@@ -23,6 +23,8 @@ import {
 import { requestQueue } from './src/services/requestQueue';
 import socketService from './src/services/socket';
 import syncService from './src/services/syncService';
+import { inAppReviewService } from './src/services/inAppReview';
+import { useReviewMetrics } from './src/hooks/useInAppReview';
 import { useAppStore } from './src/store';
 import { handleCacheVersionUpdate } from './src/utils/cacheVersioning';
 import { requireEnvVariables } from './src/utils/env';
@@ -58,6 +60,8 @@ if (__DEV__) {
 const App = () => {
   const theme = useAppStore((state) => state.theme);
   useAdaptiveTheme();
+
+  const { trackSession } = useReviewMetrics();
 
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const [appIsReady, setAppIsReady] = React.useState(false);
@@ -96,6 +100,12 @@ const App = () => {
   useEffect(() => {
     // Initialize crash reporting at app startup
     crashReportingService.init();
+
+    // Initialize in-app review service
+    inAppReviewService.init();
+
+    // Track app session for review metrics
+    trackSession();
 
     // Initialize secure storage (Keychain/Keystore) for encrypted token storage
     initializeSecureStorage().catch((error) => {

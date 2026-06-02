@@ -1,8 +1,12 @@
-import { inAppReviewService, ReviewTrigger } from '../../services/inAppReview';
+import { inAppReviewService, ReviewTrigger, DEFAULT_REVIEW_CONFIG } from '../../services/inAppReview';
 
 describe('InAppReviewService', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    // Initialize the service so isAvailable=true (set by the expo-store-review mock)
+    await inAppReviewService.init();
+    // Reset to default config in case a previous test mutated it
+    inAppReviewService.setConfig(DEFAULT_REVIEW_CONFIG);
   });
 
   describe('Eligibility Checks', () => {

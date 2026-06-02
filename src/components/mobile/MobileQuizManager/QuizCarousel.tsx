@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { Dimensions, FlatList, StyleSheet, View } from 'react-native';
+
+import MobileQuestionCard from './MobileQuestionCard';
 import { useAnalytics } from '../../../hooks/useAnalytics';
 import { Question } from '../../../types/course';
 import { AnalyticsEvent } from '../../../utils/trackingEvents';
-import MobileQuestionCard from './MobileQuestionCard';
-import { Question } from '../../../types/course';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -27,10 +27,20 @@ const QuizCarousel = ({
   selectedAnswers,
   onQuestionChange,
   onAnswerSelect,
-}: QuizCarouselProps) {
+}: QuizCarouselProps) => {
   const { trackEvent } = useAnalytics();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
   const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getItemLayout = useCallback(
+    (_: any, index: number) => ({
+      length: SCREEN_WIDTH,
+      offset: SCREEN_WIDTH * index,
+      index,
+    }),
+    []
+  );
 
   useEffect(() => {
     if (flatListRef.current && !isScrollingRef.current) {
@@ -38,7 +48,7 @@ const QuizCarousel = ({
     }
   }, [currentQuestionIndex]);
 
-  const handleScroll = (event: any) => {
+  const trackScrollAnalytics = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / SCREEN_WIDTH);
 
@@ -56,6 +66,7 @@ const QuizCarousel = ({
 
     // Mark as scrolling
     isScrollingRef.current = true;
+  };
 
   const handleMomentumScrollEnd = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
@@ -92,6 +103,7 @@ const QuizCarousel = ({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        onScroll={trackScrollAnalytics}
         onScrollBeginDrag={() => {
           isScrollingRef.current = true;
         }}

@@ -9,11 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+
+import { useDebounceCallback } from '../../hooks';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { Lesson, CourseProgress } from '../../types/course';
 import { AnalyticsEvent } from '../../utils/trackingEvents';
-import { useDebounceCallback } from '../../hooks';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -48,9 +48,10 @@ const LessonCarousel = ({
   renderLessonContent,
   onLastLessonNext,
   isLastLessonInSection = false,
-}: LessonCarouselProps) {
+}: LessonCarouselProps) => {
   const { trackEvent } = useAnalytics();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const progressBarWidth = useRef(new Animated.Value(0)).current;
 
@@ -84,12 +85,7 @@ const LessonCarousel = ({
   }, [progress, lessons, progressBarWidth]);
 
   const scrollToIndex = (index: number, animated = true) => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        x: index * SCREEN_WIDTH,
-        animated,
-      });
-    }
+    flatListRef.current?.scrollToIndex({ index, animated });
   };
 
   const debouncedScroll = useDebounceCallback((offsetX: number) => {
@@ -234,6 +230,7 @@ const LessonCarousel = ({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         scrollEventThrottle={16}
         decelerationRate="fast"

@@ -31,7 +31,8 @@ export function useInAppReview() {
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { getMetrics, recordReviewRequest } = useReviewStore();
+  const getMetrics = useReviewStore((state) => state.getMetrics);
+  const recordReviewRequest = useReviewStore((state) => state.recordReviewRequest);
 
   // Check if in-app review is supported on this device
   useEffect(() => {
@@ -154,13 +155,11 @@ export function useInAppReview() {
  * ```
  */
 export function useReviewMetrics() {
-  const {
-    incrementCoursesCompleted,
-    incrementSessionCount,
-    incrementAchievementsUnlocked,
-    setLearningStreak,
-    incrementPerfectQuizScores,
-  } = useReviewStore();
+  const incrementCoursesCompleted = useReviewStore((state) => state.incrementCoursesCompleted);
+  const incrementSessionCount = useReviewStore((state) => state.incrementSessionCount);
+  const incrementAchievementsUnlocked = useReviewStore((state) => state.incrementAchievementsUnlocked);
+  const setLearningStreak = useReviewStore((state) => state.setLearningStreak);
+  const incrementPerfectQuizScores = useReviewStore((state) => state.incrementPerfectQuizScores);
 
   const trackCourseComplete = useCallback(() => {
     incrementCoursesCompleted();

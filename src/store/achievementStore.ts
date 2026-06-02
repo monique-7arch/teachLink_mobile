@@ -2,6 +2,16 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { asyncStorageJSONStorage, isRecord, unwrapPersistedState } from './persistence';
+import { useReviewStore } from './reviewStore';
+import { inAppReviewService, ReviewTrigger } from '../services/inAppReview';
+
+const triggerAchievementReview = () => {
+  const { incrementAchievementsUnlocked, getMetrics, recordReviewRequest } = useReviewStore.getState();
+  incrementAchievementsUnlocked();
+  inAppReviewService.requestReview(ReviewTrigger.ACHIEVEMENT_UNLOCKED, getMetrics()).then((result) => {
+    recordReviewRequest(ReviewTrigger.ACHIEVEMENT_UNLOCKED, result.shown, result.reason);
+  });
+};
 
 /**
  * Rarity levels for achievement badges
@@ -281,7 +291,7 @@ export const useAchievementStore = create<AchievementState>()(
       achievementProgress: {},
       unlockedCount: 0,
 
-      unlockAchievement: (id: string) =>
+      unlockAchievement: (id: string) => {
         set((state) => {
           const achievement = state.achievements.find((a) => a.id === id);
           if (!achievement || !achievement.isLocked) return state;
@@ -299,12 +309,15 @@ export const useAchievementStore = create<AchievementState>()(
               : a
           );
 
+          setTimeout(triggerAchievementReview, 500);
+
           return {
             achievements: updatedAchievements,
             achievementProgress: snapshotAchievementProgress(updatedAchievements),
             unlockedCount: updatedAchievements.filter((a) => !a.isLocked).length,
           };
-        }),
+        });
+      },
 
       updateProgress: (id: string, current: number) =>
         set((state) => {
@@ -318,6 +331,7 @@ export const useAchievementStore = create<AchievementState>()(
             
             // Auto-unlock if progress is complete
             if (progress.current >= progress.total) {
+              setTimeout(triggerAchievementReview, 500);
               return {
                 ...a,
                 isLocked: false,

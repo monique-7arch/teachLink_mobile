@@ -9,19 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { AppText as Text } from '../common/AppText';
-import { useCourseProgress, useDynamicFontSize } from '../../hooks';
 import { SafeAreaView } from "react-native-safe-area-context";
-import logger from "../../utils/logger";
-import PrimaryButton from "../common/PrimaryButton";
+
 import BookmarkButton from "./BookmarkButton";
+import { CourseViewerSkeleton } from "./CourseViewerSkeleton";
 import LessonCarousel from "./LessonCarousel";
 import MobileSyllabus from "./MobileSyllabus";
+import { useCourseProgress, useDynamicFontSize } from '../../hooks';
 import { useAnalytics } from "../../hooks/useAnalytics";
+import { useInAppReview, useReviewMetrics } from "../../hooks/useInAppReview";
+import { ReviewTrigger } from "../../services/inAppReview";
+import { useReviewStore } from "../../store/reviewStore";
 import { Course, Lesson, Note } from "../../types/course";
+import logger from "../../utils/logger";
 import { AnalyticsEvent, ScreenName } from "../../utils/trackingEvents";
+import { AppText as Text } from '../common/AppText';
 import { ErrorBoundary } from "../common/ErrorBoundary";
-import { CourseViewerSkeleton } from "./CourseViewerSkeleton";
+import PrimaryButton from "../common/PrimaryButton";
 
 /**
  * Props for the MobileCourseViewer component
@@ -50,6 +54,8 @@ export default function MobileCourseViewer({
 }: MobileCourseViewerProps) {
   const { scale } = useDynamicFontSize();
   const { trackEvent, trackScreen } = useAnalytics();
+  const { requestReview } = useInAppReview();
+  const { trackCourseComplete } = useReviewMetrics();
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode || 'lesson');
   const [currentLessonId, setCurrentLessonId] = useState<string>(
     initialLessonId || course.sections[0]?.lessons[0]?.id || ''
@@ -154,9 +160,18 @@ export default function MobileCourseViewer({
           courseTitle: course.title,
           progress: overallProgress,
         });
+
+        // Track and request review
+        trackCourseComplete();
+        const coursesCompleted = useReviewStore.getState().coursesCompleted;
+        if (coursesCompleted === 1) {
+          requestReview(ReviewTrigger.FIRST_COURSE_COMPLETED);
+        } else if (coursesCompleted > 0 && coursesCompleted % 3 === 0) {
+          requestReview(ReviewTrigger.COURSE_MILESTONE);
+        }
       }
     }
-  }, [progress, course.id, course.title, calculateOverallProgress, trackEvent]);
+  }, [progress, course.id, course.title, calculateOverallProgress, trackEvent, trackCourseComplete, requestReview]);
 
   const handleLessonChange = useCallback(
     async (lessonId: string, index: number) => {
