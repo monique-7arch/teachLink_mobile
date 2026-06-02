@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-require-imports */
 import { render, fireEvent, act } from '@testing-library/react-native';
 import React from 'react';
 
@@ -18,17 +19,25 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
-jest.mock('lucide-react-native', () => ({
-  AlertCircle: () => null,
-  Search: () => null,
-  SlidersHorizontal: () => null,
-}));
+jest.mock('lucide-react-native', () => {
+  const React = require('react');
+  return new Proxy(
+    {},
+    {
+      get: (target, prop) => {
+        const MockComponent = (props: any) => null;
+        MockComponent.displayName = String(prop);
+        return MockComponent;
+      },
+    }
+  );
+});
 
 const mockTrackEvent = jest.fn();
 
 // Mock only necessary hooks, require actual useDebounce / useDebounceCallback
 jest.mock('../../src/hooks', () => {
-  const actual = jest.requireActual('../../src/hooks/useDebounce');
+  const actual = jest.requireActual('../../src/hooks');
   return {
     ...actual,
     useAnalytics: () => ({
@@ -71,6 +80,20 @@ jest.mock('../../src/components/mobile/SearchHistory', () => ({
 jest.mock('expo-linear-gradient', () => ({
   LinearGradient: ({ children }: any) => children || null,
 }));
+
+// Mock react-native-safe-area-context
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  const SafeAreaProvider = ({ children }: any) => children;
+  SafeAreaProvider.displayName = 'SafeAreaProvider';
+  const SafeAreaView = ({ children }: any) => children;
+  SafeAreaView.displayName = 'SafeAreaView';
+  return {
+    SafeAreaProvider,
+    SafeAreaView,
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  };
+});
 
 describe('Debouncing Rapid User Input & Scroll Events', () => {
   beforeEach(() => {

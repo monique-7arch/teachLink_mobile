@@ -28,16 +28,14 @@ class CrashReportingService {
         const originalHandler = global.ErrorUtils.getGlobalHandler();
 
         // @ts-ignore
-        global.ErrorUtils.setGlobalHandler(
-          (error: Error, isFatal?: boolean) => {
-            this.captureCrash(error, isFatal);
+        global.ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
+          this.captureCrash(error, isFatal);
 
-            // Re-throw if a handler was registered or if we want standard behavior
-            if (originalHandler) {
-              originalHandler(error, isFatal);
-            }
-          },
-        );
+          // Re-throw if a handler was registered or if we want standard behavior
+          if (originalHandler) {
+            originalHandler(error, isFatal);
+          }
+        });
       }
 
       // 2. Handle unhandled promise rejections
@@ -48,8 +46,7 @@ class CrashReportingService {
 
         // @ts-ignore
         global.onunhandledrejection = (reason: any) => {
-          const error =
-            reason instanceof Error ? reason : new Error(String(reason));
+          const error = reason instanceof Error ? reason : new Error(String(reason));
           this.captureCrash(error, false);
 
           if (originalRejectionHandler) {
@@ -62,9 +59,9 @@ class CrashReportingService {
       // crashlytics().setCrashlyticsCollectionEnabled(true);
 
       this.isInitialized = true;
-      logger.info("CrashReporting: Initialized global error handlers");
+      logger.info('CrashReporting: Initialized global error handlers');
     } catch (error) {
-      logger.error("CrashReporting: Failed to initialize handlers", error);
+      logger.error('CrashReporting: Failed to initialize handlers', error);
     }
   }
 
@@ -84,18 +81,15 @@ class CrashReportingService {
 
     // Log for development
     logger.error(
-      `❌ [Crash] ${isFatal ? "FATAL" : "Non-Fatal"} Crash: ${error.message}`,
-      errorDetails,
+      `❌ [Crash] ${isFatal ? 'FATAL' : 'Non-Fatal'} Crash: ${error.message}`,
+      errorDetails
     );
 
     // Record in health metrics service
     healthMetricsService.recordError();
 
     // Record as analytics event
-    mobileAnalyticsService.trackEvent(
-      AnalyticsEvent.CRASH_REPORT,
-      errorDetails,
-    );
+    mobileAnalyticsService.trackEvent(AnalyticsEvent.CRASH_REPORT, errorDetails);
 
     // Send to Sentry with full session context
     sentryContextService.captureException(error, {
@@ -138,11 +132,7 @@ class CrashReportingService {
   /**
    * Manually report an error that was caught (e.g., in a try-catch block).
    */
-  public reportError(
-    error: Error | any,
-    context?: string,
-    extraData?: any,
-  ): void {
+  public reportError(error: Error | any, context?: string, extraData?: any): void {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
     const errorObj = error instanceof Error ? error : new Error(errorMessage);
@@ -154,10 +144,7 @@ class CrashReportingService {
       ...extraData,
     };
 
-    logger.error(
-      `⚠️ [ErrorReport] ${context ? `[${context}] ` : ""}${errorMessage}`,
-      payload,
-    );
+    logger.error(`⚠️ [ErrorReport] ${context ? `[${context}] ` : ''}${errorMessage}`, payload);
 
     mobileAnalyticsService.trackEvent(AnalyticsEvent.API_ERROR, payload);
 
@@ -182,7 +169,7 @@ class CrashReportingService {
    */
   public resetErrorCount(): void {
     this.unhandledErrorCount = 0;
-    logger.debug("CrashReporting: Error count reset");
+    logger.debug('CrashReporting: Error count reset');
   }
 
   /**

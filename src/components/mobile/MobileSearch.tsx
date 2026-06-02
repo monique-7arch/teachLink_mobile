@@ -328,6 +328,7 @@ export const MobileSearch = ({
             renderItem={({ item }: { item: SearchResultItem }) => (
               <SearchResultCard item={item} onPress={() => onResultPress?.(item)} />
             )}
+            removeClippedSubviews
             contentContainerStyle={styles.resultsList}
             ListEmptyComponent={
               <Text style={styles.emptyText}>Try a different query or adjust filters.</Text>

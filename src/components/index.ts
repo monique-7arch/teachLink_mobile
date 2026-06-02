@@ -2,6 +2,7 @@ export * from './mobile';
 
 export * from './common/AppText';
 export * from './common/AccessibleModal';
+export * from './common/ModalPortal';
 export { ErrorBoundary } from './common/ErrorBoundary';
 export type { ErrorBoundaryFallbackProps } from './common/ErrorBoundary';
 export { KeyboardDelegateProvider, useKeyboardState } from './common/KeyboardDelegateProvider';

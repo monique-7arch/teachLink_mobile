@@ -18,9 +18,13 @@ import { sessionRestorationService } from '../src/services/sessionRestoration';
 import { useAppStore } from '../src/store';
 import { getPathFromDeepLink } from '../src/utils/linkParser';
 import { prefetchExternalResources } from '../src/utils/resourceHints';
+import { initializeLayoutAnimation } from '../src/utils/layoutAnimation';
 
 // Kick off resource hints early
 prefetchExternalResources();
+
+// Initialize LayoutAnimation for Android (single initialization at app startup)
+initializeLayoutAnimation();
 
 const ScreenTracker = () => {
   const pathname = usePathname();
@@ -73,7 +77,7 @@ const RootLayout = () => {
   const router = useRouter();
 
   const handleDeepLink = useCallback(
-    deepLink => {
+    (deepLink: any) => {
       const path = getPathFromDeepLink(deepLink);
       if (path) {
         router.replace(path);

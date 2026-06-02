@@ -1,22 +1,31 @@
-import './src/utils/assetInlinePolyfill';
+import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, InteractionManager, LogBox } from 'react-native';
 
 import './global.css';
-
-import * as Font from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
 import { ErrorBoundary } from './src/components/common/ErrorBoundary';
+import { requireEnvVariables } from './src/config/env';
 import { initializeLogging } from './src/config/logging';
-import { AuthProvider, useAdaptiveTheme } from './src/hooks';
+import { AuthProvider, useAuth } from './src/hooks';
 import AppNavigator from './src/navigation/AppNavigator';
-import { warmCriticalCaches } from './src/services/cacheWarming';
+import { setupNotificationNavigation } from './src/navigation/linking';
+import { apiClient } from './src/services/api';
+import { requestQueue } from './src/services/api/requestQueue';
+import { crashReportingService } from './src/services/crashReporting';
+import { initializeFeatureFlags, refreshFeatureFlags } from './src/services/featureFlags';
 import { mobileAuthService } from './src/services/mobileAuth';
+import {
+  addNotificationReceivedListener,
+  getLastNotificationResponse,
+  removeNotificationListener,
+} from './src/services/pushNotifications';
 import socketService from './src/services/socket';
+import { syncService } from './src/services/syncService';
 import { useAppStore } from './src/store';
-import { handleCacheVersionUpdate } from './src/utils/cacheVersioning';
 import { appLogger } from './src/utils/logger';
+import { handleNotificationReceived } from './src/utils/notificationHandlers';
 import { prefetchExternalResources } from './src/utils/resourceHints';
 import { mobileAnalyticsService } from './src/services/mobileAnalytics';
 import { sentryContextService } from './src/services/sentryContext';
@@ -28,11 +37,8 @@ import { StartupProgressOverlay } from './src/components/common/StartupProgressO
 
 const appStartTime = Date.now();
 
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
-
-// Centralized structured logging initialized lazily in services bootstrap useEffect
-// requireEnvVariables();
+// Centralized structured logging initialized on startup
+requireEnvVariables();
 
 // Preconnect to API hosts and external resources
 prefetchExternalResources();
@@ -48,9 +54,26 @@ if (__DEV__) {
   console.debug = () => {};
 }
 
+const FeatureFlagInitializer: React.FC = () => {
+  const auth = useAuth();
+
+  useEffect(() => {
+    initializeFeatureFlags().catch(error => {
+      appLogger.errorSync('Feature flag initialization failed', error as Error);
+    });
+  }, []);
+
+  useEffect(() => {
+    refreshFeatureFlags().catch(error => {
+      appLogger.warnSync('Feature flag refresh failed', error as Error);
+    });
+  }, [auth.user?.id]);
+
+  return null;
+};
+
 const App = () => {
-  const theme = useAppStore((state) => state.theme);
-  useAdaptiveTheme();
+  const theme = useAppStore(state => state.theme);
 
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const [appIsReady, setAppIsReady] = React.useState(false);
@@ -67,7 +90,7 @@ const App = () => {
 
         // 1. Load fonts
         startupProgressService.startStep('fonts');
-        await Font.loadAsync({
+        await FontLoadAsync({
           'Inter-Regular': require('./assets/fonts/Inter-Regular.ttf'),
           'Inter-Bold': require('./assets/fonts/Inter-Bold.ttf'),
         });
@@ -86,12 +109,7 @@ const App = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
         startupProgressService.completeStep('auth');
 
-        // 4. Initial data fetch (simulate or add real fetch)
-        startupProgressService.startStep('data');
-        await new Promise(resolve => setTimeout(resolve, 500));
-        startupProgressService.completeStep('data');
-
-        // 5. Warm critical caches (user profile + home feed) in parallel
+        // 3. Warm critical caches (user profile + home feed) in parallel
         await warmCriticalCaches();
       } catch (e) {
         console.warn('Error during app initialization:', e);
@@ -129,9 +147,40 @@ const App = () => {
   const SESSION_REFRESH_WINDOW_MS = 5 * 60 * 1000;
 
   useEffect(() => {
-    // Initialize battery monitoring
-    batteryService.initialize().catch(err => {
-      console.error('[App] Failed to initialize battery service:', err);
+    // Initialize crash reporting at app startup
+    crashReportingService.init();
+
+    // Initialize secure storage (Keychain/Keystore) for encrypted token storage
+    initializeSecureStorage().catch(error => {
+      logger.error('Failed to initialize secure storage:', error);
+      // Continue app startup even if secure storage init fails
+      // (user will be prompted to re-authenticate if needed)
+    });
+
+    // Add global handler for unhandled promise rejections
+    const unhandledRejectionHandler = (reason: any) => {
+      const error = reason instanceof Error ? reason : new Error(String(reason));
+      appLogger.errorSync('Unhandled Promise Rejection', error);
+      crashReportingService.reportError(error, 'UnhandledPromiseRejection');
+    };
+
+    // Register unhandled rejection listener
+    if (global.onunhandledrejection === undefined) {
+      // @ts-ignore - Setting global error handler
+      global.onunhandledrejection = unhandledRejectionHandler;
+    }
+
+    // Connect to socket when app starts
+    socketService.connect();
+
+    // Initialize push notifications: request permissions and get device token
+    registerForPushNotifications().then(async token => {
+      if (token) {
+        const { setPushToken, setTokenRegistered } = useNotificationStore.getState();
+        setPushToken(token);
+        const registered = await registerTokenWithBackend(token);
+        setTokenRegistered(registered);
+      }
     });
 
     // Lazy load Sentry after core initialization
@@ -230,6 +279,7 @@ const App = () => {
     <ErrorBoundary>
       <StartupProgressOverlay />
       <AuthProvider>
+        <FeatureFlagInitializer />
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <AppNavigator />
       </AuthProvider>

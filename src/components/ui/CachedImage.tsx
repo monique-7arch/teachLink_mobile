@@ -89,7 +89,7 @@ function resolveStyleDimension(
 /**
  * CachedImage Component
  *
- * Wraps expo-image's Image component with automatic caching and prefetching.
+ * Wraps expo-image's Image component with automatic caching, prefetching, and dimension detection.
  * Provides performance optimization for image-heavy screens.
  *
  * Features:
@@ -98,6 +98,8 @@ function resolveStyleDimension(
  * - Error handling
  * - Accessibility support
  * - Optional loading indicator
+ * - Automatic dimension detection to prevent layout shift
+ * - Aspect ratio preservation
  *
  * @example
  * ```tsx
@@ -106,6 +108,7 @@ function resolveStyleDimension(
  *   alt="User avatar"
  *   style={{ width: 100, height: 100 }}
  *   autoPrefetch={true}
+ *   enableDimensionDetection={true}
  *   onLoadComplete={() => console.log('Image loaded')}
  * />
  * ```
@@ -202,6 +205,22 @@ export const CachedImage: React.FC<CachedImageProps> = ({
     logger.warn(`Failed to load image: ${optimizedSources?.primaryUri}`, error);
   };
 
+  // ─── Calculate container style with aspect ratio ─────────────────────────
+
+  const getContainerStyle = () => {
+    if (aspectRatioStyle) {
+      return [
+        styles.container,
+        {
+          width: aspectRatioStyle.width,
+          height: aspectRatioStyle.height,
+        },
+        style,
+      ];
+    }
+    return [styles.container, style];
+  };
+
   // ─── Render ────────────────────────────────────────────────────────────────
 
   if (!optimizedSources) {
@@ -209,7 +228,7 @@ export const CachedImage: React.FC<CachedImageProps> = ({
   }
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={getContainerStyle()}>
       <ExpoImage
         source={[{ uri: optimizedSources.primaryUri }, { uri: optimizedSources.fallbackUri }]}
         placeholder={{ uri: optimizedSources.lqipUri }}
@@ -223,7 +242,11 @@ export const CachedImage: React.FC<CachedImageProps> = ({
         accessibilityLabel={alt}
         accessibilityRole="image"
         {...expoImageProps}
-        style={[styles.image, style]}
+        style={[
+          styles.image,
+          aspectRatioStyle ? { aspectRatio: detectedDimensions?.aspectRatio } : null,
+          style,
+        ]}
       />
 
       {/* Loading indicator overlay */}
