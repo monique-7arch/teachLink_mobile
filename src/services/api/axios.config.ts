@@ -1,29 +1,13 @@
-/* IMPLEMENTATION APPROACH for #141 - Rate Limit Handling + Exponential Backoff
+/* IMPLEMENTATION APPROACH
  *
- * RECON FINDINGS:
- * - Current axios instance: apiClient with baseURL from env, timeout 10000ms
- * - Existing request interceptor: YES - adds Bearer token from secure storage
- * - Existing response interceptor: YES - handles 401 (refresh), 403 (forbidden), 429 (rate limit), 500+ (server errors)
- * - Current 429 implementation: 3 retries max with exponential backoff (max 10s delay)
- * - Axios version: ^1.13.2 from package.json
- * - Error UX: logger utility (logger.error, logger.warn) - no toast library
- * - TypeScript: strict mode enabled, using InternalAxiosRequestConfig, AxiosError types
- * - Testing: Jest with jest-expo preset
- * - CI checks: lint, typecheck (tsc --noEmit), jest tests
+ * Issue #225 — Exponential backoff with jitter for all failed API requests
+ *   - 7 max retries, base delay 1 s, cap 60 s, ±10 % jitter
+ *   - Applies to 5xx server errors (429 already handled separately)
  *
- * STRATEGY:
- * 1. Extend 429 retry from 3 to 5 retries
- * 2. Use explicit backoff delays: 1000ms, 2000ms, 4000ms, 8000ms (total 15s max)
- * 3. Add user feedback via logger during backoff (non-intrusive, mobile-appropriate)
- * 4. Ensure no infinite retry loops with hard 5-retry limit
- * 5. Preserve ALL existing error handling for non-429 errors
- * 6. Keep existing 401 refresh flow and 500+ retry logic untouched
- *
- * MAX RETRY DELAYS: [1000, 2000, 4000, 8000]ms → total 15s max backoff
- * USER FEEDBACK: logger.warn() for retry attempts, logger.error() for final failure
- * RETRY TRACKING: _retryCount header on original request config
- *
- * FILES CHANGED: src/services/api/axios.config.ts ONLY
+ * Issue #224 — Request deduplication for concurrent API calls
+ *   - GET requests share a single in-flight Promise via RequestDeduplicator
+ *   - Duplicate callers receive the same result without an extra network round-trip
+ *   - AbortController cancels the request if all subscribers leave within 5 s
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
@@ -40,7 +24,22 @@ import { getAccessToken, getRefreshToken, saveTokens } from '../secureStorage';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const getBackoffTime = (retryCount: number) => Math.min(1000 * 2 ** retryCount, 10000);
+/**
+ * Issue #225 — Exponential backoff with ±10 % jitter.
+ *
+ * delay = min(baseDelay × 2^attempt, maxDelay) × jitter
+ * where jitter ∈ [0.9, 1.1]
+ */
+const BASE_DELAY_MS = 1_000;
+const MAX_DELAY_MS = 60_000;
+const MAX_SERVER_ERROR_RETRIES = 7;
+
+function getBackoffWithJitter(attempt: number): number {
+  const exponential = BASE_DELAY_MS * Math.pow(2, attempt);
+  const capped = Math.min(exponential, MAX_DELAY_MS);
+  const jitter = 0.9 + Math.random() * 0.2; // ±10 %
+  return Math.round(capped * jitter);
+}
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -126,17 +125,23 @@ apiClient.interceptors.request.use(
 // ─── Image format request interceptor ──────────────────────────────────────
 // Negotiate WebP format via Accept header for image-serving API endpoints.
 
-const IMAGE_PATH_PATTERNS = [/\/images?\//, /\/uploads?\//, /\/avatars?\//, /\/media\//, /\.(png|jpg|jpeg|gif|webp|avif)/i];
+const IMAGE_PATH_PATTERNS = [
+  /\/images?\//,
+  /\/uploads?\//,
+  /\/avatars?\//,
+  /\/media\//,
+  /\.(png|jpg|jpeg|gif|webp|avif)/i,
+];
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const url = config.url ?? '';
-    if (IMAGE_PATH_PATTERNS.some((pattern) => pattern.test(url))) {
+    if (IMAGE_PATH_PATTERNS.some(pattern => pattern.test(url))) {
       config.headers.Accept = 'image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8';
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  error => Promise.reject(error)
 );
 
 // ─── Response interceptor ───────────────────────────────────────────────────
@@ -307,20 +312,43 @@ apiClient.interceptors.response.use(
       });
     }
 
-    // ─── 500+: Server errors (retry limited) ───────────────────────────────
+    // ─── 500+: Server errors — exponential backoff with jitter (Issue #225) ──
+    //
+    // Retries up to MAX_SERVER_ERROR_RETRIES (7) times.
+    // Delay = min(1 s × 2^attempt, 60 s) × jitter(±10 %)
+    // Delays (approx): 1 s, 2 s, 4 s, 8 s, 16 s, 32 s, 60 s
 
     if (status && status >= 500) {
       originalRequest._retryCount = originalRequest._retryCount || 0;
 
-      if (originalRequest._retryCount < 2) {
+      if (originalRequest._retryCount < MAX_SERVER_ERROR_RETRIES) {
+        const attempt = originalRequest._retryCount;
         originalRequest._retryCount += 1;
 
-        const delayTime = getBackoffTime(originalRequest._retryCount);
+        const delayTime = getBackoffWithJitter(attempt);
+
+        appLogger.warnSync(
+          `Server error ${status}: retry ${originalRequest._retryCount}/${MAX_SERVER_ERROR_RETRIES} in ${delayTime}ms`,
+          {
+            endpoint: originalRequest.url,
+            method: originalRequest.method,
+            attempt: originalRequest._retryCount,
+            delayMs: delayTime,
+          }
+        );
 
         await delay(delayTime);
-
         return apiClient(originalRequest);
       }
+
+      appLogger.errorSync(
+        `Server error ${status}: max retries (${MAX_SERVER_ERROR_RETRIES}) exceeded`,
+        undefined,
+        {
+          endpoint: originalRequest.url,
+          method: originalRequest.method,
+        }
+      );
 
       return Promise.reject({
         message: 'Server error. Please try again later.',
