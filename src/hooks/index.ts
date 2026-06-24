@@ -48,4 +48,5 @@ export { OptimizedPinchZoomView, useOptimizedPinchZoom } from './useOptimizedPin
 export { OptimizedSwipeView, useOptimizedSwipe } from './useOptimizedSwipe';
 export * from './useDashboardMetrics';
 export { OptimizedVideoGesturesView, useOptimizedVideoGestures } from './useOptimizedVideoGestures';
+export * from './useTouchDeduplication';
 
