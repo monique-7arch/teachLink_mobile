@@ -1,17 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
-  clearCache,
-  fetchWithSWR,
-  getCache,
-  invalidateCacheByDataVersion,
-  invalidateCacheByTags,
-  invalidateCacheForBatchRequests,
-  invalidateCacheForMutation,
-  setCache,
-  setMaxCacheSize,
-  getCacheStats,
-  resetCacheStats,
+    clearCache,
+    fetchWithSWR,
+    getCache,
+    getCacheStats,
+    getCacheStatus,
+    invalidateCacheByDataVersion,
+    invalidateCacheByTags,
+    invalidateCacheForBatchRequests,
+    invalidateCacheForMutation,
+    resetCacheStats,
+    setCache,
+    setMaxCacheSize,
 } from '../../../services/api/cache';
 
 const mockedAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
@@ -186,6 +187,33 @@ describe('three-tier cache behavior', () => {
       hits: 0,
       misses: 1,
       networkFetches: 1,
+    });
+  });
+
+  it('tracks revalidation state while stale data is being refreshed', async () => {
+    setCache('users:u1', { id: 'u1', name: 'Ada' }, 60_000, 30_000);
+    await new Promise(resolve => setTimeout(resolve, 5));
+
+    const fetcher = jest.fn().mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve({ id: 'u1', name: 'Grace' }), 10))
+    );
+
+    const responsePromise = fetchWithSWR('users:u1', fetcher, 1, 30_000);
+
+    expect(getCacheStatus('users:u1')).toMatchObject({
+      isCached: true,
+      isStale: true,
+      isRevalidating: true,
+    });
+
+    const response = await responsePromise;
+    expect(response).toEqual({ id: 'u1', name: 'Ada' });
+    await Promise.resolve();
+
+    expect(getCacheStatus('users:u1')).toMatchObject({
+      isCached: true,
+      isStale: false,
+      isRevalidating: false,
     });
   });
 

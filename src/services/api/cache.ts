@@ -49,6 +49,21 @@ let invalidations = 0;
 let operationsSinceAnalytics = 0;
 let lastAnalyticsAt = 0;
 
+const revalidatingKeys = new Set<string>();
+const cacheStatusListeners = new Set<() => void>();
+
+export interface CacheStatus {
+  key: string;
+  isCached: boolean;
+  isStale: boolean;
+  isExpired: boolean;
+  isRevalidating: boolean;
+  ageMs: number | null;
+  cachedAt: number | null;
+  ttlMs: number | null;
+  staleTtlMs: number | null;
+}
+
 function storageKeyFor(key: string): string {
   return `${CACHE_STORAGE_PREFIX}${encodeURIComponent(key)}`;
 }
@@ -108,6 +123,72 @@ export function resetCacheStats(): void {
   invalidations = 0;
   operationsSinceAnalytics = 0;
   lastAnalyticsAt = 0;
+}
+
+function notifyCacheStatusListeners(): void {
+  cacheStatusListeners.forEach(listener => {
+    try {
+      listener();
+    } catch {
+      // Swallow listener errors so cache updates stay resilient.
+    }
+  });
+}
+
+function setRevalidatingState(key: string, isRevalidating: boolean): void {
+  if (isRevalidating) {
+    const changed = revalidatingKeys.size === 0 || !revalidatingKeys.has(key);
+    revalidatingKeys.add(key);
+    if (changed) {
+      notifyCacheStatusListeners();
+    }
+    return;
+  }
+
+  const hadKey = revalidatingKeys.delete(key);
+  if (hadKey) {
+    notifyCacheStatusListeners();
+  }
+}
+
+export function subscribeToCacheStatus(listener: () => void): () => void {
+  cacheStatusListeners.add(listener);
+  return () => {
+    cacheStatusListeners.delete(listener);
+  };
+}
+
+export function getRevalidatingCacheKeys(): string[] {
+  return Array.from(revalidatingKeys);
+}
+
+export function getCacheStatus(key: string): CacheStatus {
+  const entry = store.get(key);
+  if (!entry) {
+    return {
+      key,
+      isCached: false,
+      isStale: false,
+      isExpired: false,
+      isRevalidating: revalidatingKeys.has(key),
+      ageMs: null,
+      cachedAt: null,
+      ttlMs: null,
+      staleTtlMs: null,
+    };
+  }
+
+  return {
+    key,
+    isCached: true,
+    isStale: isStale(entry),
+    isExpired: isExpired(entry),
+    isRevalidating: revalidatingKeys.has(key),
+    ageMs: Date.now() - entry.cachedAt,
+    cachedAt: entry.cachedAt,
+    ttlMs: entry.ttl,
+    staleTtlMs: entry.staleTtl,
+  };
 }
 
 export function estimateSize(obj: any, visited = new Set<any>()): number {
@@ -379,6 +460,7 @@ export function setCache<T>(
   };
 
   putMemoryEntry(key, entry);
+  setRevalidatingState(key, false);
   void persistCacheEntry(key, entry);
 }
 
@@ -386,6 +468,7 @@ export function invalidateCache(key: string): void {
   if (removeMemoryEntry(key)) {
     invalidations++;
   }
+  setRevalidatingState(key, false);
   void removePersistentCache(key);
 }
 
@@ -532,6 +615,8 @@ function parseBatchRequests(requests: unknown): { method?: string; url?: string 
 export function clearCache(): void {
   store.clear();
   currentCacheSize = 0;
+  revalidatingKeys.clear();
+  notifyCacheStatusListeners();
   void clearPersistentCache();
 }
 
@@ -575,17 +660,38 @@ export async function fetchWithSWR<T>(
   options?: string | CacheOptions
 ): Promise<T> {
   const normalizedOptions = normalizeOptions(options);
-  const cached = await getTieredEntry<T>(key);
+  const memoryEntry = getMemoryEntry<T>(key);
 
-  if (cached !== null) {
-    if (isStale(cached)) {
+  if (memoryEntry !== null) {
+    if (isStale(memoryEntry)) {
       backgroundRevalidations++;
+      setRevalidatingState(key, true);
       fetcher()
         .then(fresh => {
           recordNetworkFetch();
           setCache(key, fresh, ttl, staleTtl, normalizedOptions);
         })
         .catch(() => {
+          setRevalidatingState(key, false);
+          /* keep stale data on error */
+        });
+    }
+    return memoryEntry.data;
+  }
+
+  const cached = await getTieredEntry<T>(key);
+
+  if (cached !== null) {
+    if (isStale(cached)) {
+      backgroundRevalidations++;
+      setRevalidatingState(key, true);
+      fetcher()
+        .then(fresh => {
+          recordNetworkFetch();
+          setCache(key, fresh, ttl, staleTtl, normalizedOptions);
+        })
+        .catch(() => {
+          setRevalidatingState(key, false);
           /* keep stale data on error */
         });
     }

@@ -52,4 +52,4 @@ Warming is best effort and never blocks startup on failures. Failed warm request
 - invalidation count
 - estimated network reduction rate
 
-The cache reports `PERFORMANCE_METRIC` analytics events under `api_cache_hit_rate` at a throttled cadence. The development-only API Cache overlay shows the same counters in the app and makes the 70%+ network-reduction target visible during manual testing.
+The cache reports `PERFORMANCE_METRIC` analytics events under `api_cache_hit_rate` at a throttled cadence. The app also surfaces a lightweight revalidation banner during background refreshes so testers can see when stale data is being updated in the background and how long the cached payload has been waiting for a refresh.

@@ -1,9 +1,8 @@
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useRef } from 'react';
-import { Alert, AppState, AppStateStatus, InteractionManager, LogBox } from 'react-native';
-
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, AppState, AppStateStatus, InteractionManager, LogBox, Text, View } from 'react-native';
 import StorybookUI from './.rnstorybook';
 import './global.css';
 import { ErrorBoundary } from './src/components/common/ErrorBoundary';
@@ -11,18 +10,18 @@ import { initializeLogging } from './src/config/logging';
 import { AuthProvider, useAdaptiveTheme, useReviewMetrics } from './src/hooks';
 import AppNavigator from './src/navigation/AppNavigator';
 import { setupNotificationNavigation } from './src/navigation/linking';
-import { apiClient } from './src/services/api';
+import { apiClient, getCacheStatus, getRevalidatingCacheKeys, subscribeToCacheStatus } from './src/services/api';
 import { warmCriticalCaches } from './src/services/cacheWarming';
 import { crashReportingService } from './src/services/cashReporting';
 import { featureCapabilities } from './src/services/featureCapabilities';
 import { inAppReviewService } from './src/services/inAppReview';
 import { mobileAuthService } from './src/services/mobileAuth';
 import {
-  addNotificationReceivedListener,
-  getLastNotificationResponse,
-  removeNotificationListener,
-  registerForPushNotifications, // Added missing native push helpers
-  registerTokenWithBackend,
+    addNotificationReceivedListener,
+    getLastNotificationResponse,
+    registerForPushNotifications, // Added missing native push helpers
+    registerTokenWithBackend,
+    removeNotificationListener,
 } from './src/services/pushNotifications';
 import { requestQueue } from './src/services/requestQueue';
 import { initializeSecureStorage } from './src/services/secureStorage'; // Added missing storage helper mock path
@@ -59,6 +58,49 @@ if (__DEV__) {
   console.warn = () => {};
   console.debug = () => {};
 }
+
+const CacheRevalidationBanner = () => {
+  const [revalidatingKeys, setRevalidatingKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    const syncState = () => {
+      setRevalidatingKeys(getRevalidatingCacheKeys());
+    };
+
+    syncState();
+    return subscribeToCacheStatus(syncState);
+  }, []);
+
+  if (revalidatingKeys.length === 0) {
+    return null;
+  }
+
+  const primaryKey = revalidatingKeys[0];
+  const status = getCacheStatus(primaryKey);
+  const ageSeconds = status.cachedAt == null ? 0 : Math.max(0, Math.round((Date.now() - status.cachedAt) / 1000));
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: 48,
+        left: 16,
+        right: 16,
+        zIndex: 9999,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: '#1f2937',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#f9fafb', fontWeight: '600' }}>Syncing…</Text>
+      <Text style={{ color: '#d1d5db', fontSize: 12 }}>
+        {status.cachedAt == null ? 'Refreshing cached data' : `Cached ${ageSeconds}s ago`}
+      </Text>
+    </View>
+  );
+};
 
 const App = () => {
   const theme = useAppStore(state => state.theme);
@@ -294,6 +336,7 @@ const App = () => {
     <ErrorBoundary>
       <AuthProvider>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+        <CacheRevalidationBanner />
         <AppNavigator />
       </AuthProvider>
     </ErrorBoundary>
