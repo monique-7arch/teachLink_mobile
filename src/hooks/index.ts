@@ -52,3 +52,6 @@ export * from './useTouchDeduplication';
 export { useSearchIndex } from './useSearchIndex';
 export type { UseSearchIndexResult } from './useSearchIndex';
 
+// Intersection Observer / visibility hooks
+export * from './useIntersectionObserver';
+export * from './useViewabilityCallback';
