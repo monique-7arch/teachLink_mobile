@@ -92,7 +92,7 @@ function PrimaryButton({
           colors={['#20afe7', '#2c8aec', '#586ce9']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="flex-row items-center justify-center gap-2 shadow-sm shadow-[#20afe7]/30 elevation-4"
+          className="elevation-4 flex-row items-center justify-center gap-2 shadow-sm shadow-[#20afe7]/30"
           style={{
             paddingHorizontal: config.paddingHorizontal,
             paddingVertical: config.paddingVertical,
@@ -107,10 +107,7 @@ function PrimaryButton({
               <Text
                 allowFontScaling={false}
                 className="font-semibold"
-                style={[
-                  { fontSize: config.fontSize, color: '#ffffff' },
-                  textStyle,
-                ]}
+                style={[{ fontSize: config.fontSize, color: '#ffffff' }, textStyle]}
               >
                 {title}
               </Text>
@@ -151,10 +148,7 @@ function PrimaryButton({
             <Text
               allowFontScaling={false}
               className="font-semibold"
-              style={[
-                { fontSize: config.fontSize, color: '#ffffff' },
-                textStyle,
-              ]}
+              style={[{ fontSize: config.fontSize, color: '#ffffff' }, textStyle]}
             >
               {title}
             </Text>
@@ -196,10 +190,7 @@ function PrimaryButton({
           <Text
             allowFontScaling={false}
             className="font-semibold"
-            style={[
-              { fontSize: config.fontSize, color: '#19c3e6' },
-              textStyle,
-            ]}
+            style={[{ fontSize: config.fontSize, color: '#19c3e6' }, textStyle]}
           >
             {title}
           </Text>
@@ -210,22 +201,3 @@ function PrimaryButton({
 }
 
 export default memo(PrimaryButton);
-
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  gradientButton: {
-    shadowColor: '#20afe7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonText: {
-    fontWeight: '600',
-  },
-});

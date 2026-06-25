@@ -2,7 +2,15 @@ import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, AppStateStatus, InteractionManager, LogBox, Text, View } from 'react-native';
+import {
+  Alert,
+  AppState,
+  AppStateStatus,
+  InteractionManager,
+  LogBox,
+  Text,
+  View,
+} from 'react-native';
 import StorybookUI from './.rnstorybook';
 import './global.css';
 import { ErrorBoundary } from './src/components/common/ErrorBoundary';
@@ -10,18 +18,23 @@ import { initializeLogging } from './src/config/logging';
 import { AuthProvider, useAdaptiveTheme, useReviewMetrics } from './src/hooks';
 import AppNavigator from './src/navigation/AppNavigator';
 import { setupNotificationNavigation } from './src/navigation/linking';
-import { apiClient, getCacheStatus, getRevalidatingCacheKeys, subscribeToCacheStatus } from './src/services/api';
+import {
+  apiClient,
+  getCacheStatus,
+  getRevalidatingCacheKeys,
+  subscribeToCacheStatus,
+} from './src/services/api';
 import { warmCriticalCaches } from './src/services/cacheWarming';
 import { crashReportingService } from './src/services/cashReporting';
 import { featureCapabilities } from './src/services/featureCapabilities';
 import { inAppReviewService } from './src/services/inAppReview';
 import { mobileAuthService } from './src/services/mobileAuth';
 import {
-    addNotificationReceivedListener,
-    getLastNotificationResponse,
-    registerForPushNotifications, // Added missing native push helpers
-    registerTokenWithBackend,
-    removeNotificationListener,
+  addNotificationReceivedListener,
+  getLastNotificationResponse,
+  registerForPushNotifications, // Added missing native push helpers
+  registerTokenWithBackend,
+  removeNotificationListener,
 } from './src/services/pushNotifications';
 import { requestQueue } from './src/services/requestQueue';
 import { initializeSecureStorage } from './src/services/secureStorage'; // Added missing storage helper mock path
@@ -77,7 +90,8 @@ const CacheRevalidationBanner = () => {
 
   const primaryKey = revalidatingKeys[0];
   const status = getCacheStatus(primaryKey);
-  const ageSeconds = status.cachedAt == null ? 0 : Math.max(0, Math.round((Date.now() - status.cachedAt) / 1000));
+  const ageSeconds =
+    status.cachedAt == null ? 0 : Math.max(0, Math.round((Date.now() - status.cachedAt) / 1000));
 
   return (
     <View
@@ -116,7 +130,8 @@ const App = () => {
       try {
         // 1. Load fonts
         await Font.loadAsync({
-          // You can add custom fonts here later if needed
+          'Inter-Regular': require('./assets/fonts/Inter-Regular.ttf'),
+          'Inter-Bold': require('./assets/fonts/Inter-Bold.ttf'),
         });
 
         // 2. Version-based cache invalidation: clear stale caches on app/data version bump
@@ -210,7 +225,8 @@ const App = () => {
       socketService.connect();
 
       // Feature capability detection (permission checks, async)
-      featureCapabilities.checkAllCapabilities()
+      featureCapabilities
+        .checkAllCapabilities()
         .then(capabilities => {
           const degradationStore = useDegradationStore.getState();
           appLogger.infoSync('[App] Feature capabilities checked', {
@@ -225,11 +241,14 @@ const App = () => {
           });
         })
         .catch(error => {
-          appLogger.errorSync('[App] Error checking feature capabilities', error instanceof Error ? error : new Error(String(error)));
+          appLogger.errorSync(
+            '[App] Error checking feature capabilities',
+            error instanceof Error ? error : new Error(String(error))
+          );
         });
 
       // Push notification registration (permission dialog + network)
-      registerForPushNotifications().then(async (token) => {
+      registerForPushNotifications().then(async token => {
         if (token) {
           const { setPushToken, setTokenRegistered } = useNotificationStore.getState();
           setPushToken(token);
